@@ -1,11 +1,11 @@
 import cv2
 import numpy as np
 import os
-
-# img = cv2.imread('faces/subject10.PNG', 0)
-# cv2.imwrite('faces/subject10.PNG', img)
+from PIL import Image
 
 path = 'faces/'
+cascadePath = "haarcascade_frontalface_default.xml"
+faceCascade = cv2.CascadeClassifier(cascadePath)
 
 
 def get_images(path):
@@ -13,24 +13,23 @@ def get_images(path):
 
     images = []
     labels = []
-
+    j = 0
     for image_path in image_paths:
-        gray = cv2.imread(image_path, 0)
+        gray = Image.open(image_path).convert('L')
+        image = np.array(gray, 'uint8')
+        subject_number = int(os.path.basename(image_path).split(".")[0].replace("subject", ""))
 
-        subject_number = int(os.path.split(image_path)[1].split(".")[0].replace("subject", ""))
-
-        faces = faceCascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
-
+        faces = faceCascade.detectMultiScale(image, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
         for (x, y, w, h) in faces:
-            images.append(gray[y: y + h, x: x + w])
+            images.append(image[y: y + h, x: x + w])
+            # cv2.imwrite('frontalfaces/subject' + str(subject_number) + '_' + str(j) + '.jpg', image[y: y + h, x: x + w])
+            # print(subject_number)
             labels.append(subject_number)
+            j += 1
     return images, labels
 
 
-cascadePath = "haarcascade_frontalface_default.xml"
-faceCascade = cv2.CascadeClassifier(cascadePath)
-
-recognizer = cv2.face.LBPHFaceRecognizer_create()
+recognizer = cv2.face.LBPHFaceRecognizer_create(1, 8, 8, 8, 90)
 
 images, labels = get_images(path)
 
@@ -40,7 +39,8 @@ cap = cv2.VideoCapture(0)
 
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
 out = cv2.VideoWriter('output.avi', fourcc, 20.0, (640, 480))
-mconf = 123
+
+mconf = 90
 n_pr = -1
 
 while (cap.isOpened()):
@@ -53,7 +53,9 @@ while (cap.isOpened()):
             if conf < mconf:
                 mconf = conf
                 n_pr = number_predicted
-        img = cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+            img = cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+            cv2.putText(img, str(number_predicted), (x, y + h), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                        (0, 255, 0), 2, cv2.LINE_AA)
         cv2.imshow('frame', frame)
         out.write(frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -61,7 +63,7 @@ while (cap.isOpened()):
     else:
         break
 
-if mconf != 123:
+if mconf != 90:
     print("Subject is recognized as ", n_pr)
 else:
     print("Subject isn't recognised")
