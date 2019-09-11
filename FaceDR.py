@@ -22,8 +22,8 @@ def get_images(path):
         faces = faceCascade.detectMultiScale(image, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
         for (x, y, w, h) in faces:
             images.append(image[y: y + h, x: x + w])
-            # cv2.imwrite('frontalfaces/subject' + str(subject_number) + '_' + str(j) + '.jpg', image[y: y + h, x: x + w])
-            # print(subject_number)
+            cv2.imwrite('frontalfaces/subject' + str(subject_number) + '_' + str(j) + '.jpg', image[y: y + h, x: x + w])
+            print(subject_number)
             labels.append(subject_number)
             j += 1
     return images, labels
