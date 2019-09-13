@@ -63,7 +63,7 @@ while (cap.isOpened()):
         break
 
 if mconf != 90:
-    print("Subject is recognized as ", n_pr)
+    print("Subject is recognized as ", n_pr, " with confidence: ", mconf)
 else:
     print("Subject isn't recognised")
 
